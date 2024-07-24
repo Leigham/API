@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import { Route } from "../../types/Route";
-
+const apiKey = "cce3a30779e743c6b9735405242407";
 // Handler function for fetching weather
 const fetchWeatherHandler: (req: Request, res: Response) => void = async (
   req,
   res
 ) => {
   try {
-    const apiKey = "your_api_key";
     const city = req.query.city as string;
 
     if (!city) {
@@ -15,7 +14,7 @@ const fetchWeatherHandler: (req: Request, res: Response) => void = async (
       return;
     }
 
-    const apiUrl = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+    const apiUrl = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}&aqi=no`;
     const response = await fetch(apiUrl);
     const data = await response.json();
 

@@ -36,6 +36,11 @@ const registerRoute: Route = {
       description: "Enable test mode for the registration.",
     },
   ],
+  exampleBody: {
+    name: "John Doe",
+    email: "John@Doe.com",
+    password: "password123",
+  },
 };
 
 export default registerRoute;

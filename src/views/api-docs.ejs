@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Documentation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .collapsible {
+        cursor: pointer;
+        outline: none;
+        border: none;
+        background-color: #3490dc;
+        color: white;
+        padding: 10px;
+        text-align: left;
+        border-radius: 5px;
+        width: 100%;
+        font-size: 16px;
+      }
+      .collapsible:hover {
+        background-color: #2779bd;
+      }
+      .content {
+        padding: 0 18px;
+        display: none;
+        overflow: hidden;
+        background-color: #f1f1f1;
+      }
+      .content.show {
+        display: block;
+      }
+      .response-area {
+        display: none;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        background: #f9f9f9;
+        border-radius: 5px;
+        max-width: 100%;
+        overflow: auto;
+      }
+      .response-area.show {
+        display: block;
+      }
+      .query-params {
+        margin-top: 10px;
+      }
+      .url-box {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background: #f1f1f1;
+        border-radius: 5px;
+        position: relative;
+      }
+      .url-box input {
+        border: none;
+        background: none;
+        width: calc(100% - 40px);
+        padding: 5px;
+        font-size: 14px;
+      }
+      .url-box button {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #38a169;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .url-box button:hover {
+        background: #2f855a;
+      }
+      pre {
+        white-space: pre-wrap; /* Ensures text wraps properly */
+        word-wrap: break-word; /* Breaks long words to prevent overflow */
+        margin: 0; /* Remove default margins */
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto p-6">
+      <h1 class="text-4xl font-extrabold mb-6 text-center text-gray-800">
+        API Documentation
+      </h1>
+      <div class="space-y-6">
+        <% Object.keys(routeGroups).forEach(method => { %>
+        <div class="mb-6">
+          <button class="collapsible">
+            <%= method.toUpperCase() %> Routes
+          </button>
+          <div class="content">
+            <% routeGroups[method].forEach(route => { %>
+            <div class="mb-6 border border-gray-200 bg-white p-4 rounded-lg">
+              <h2 class="text-2xl font-semibold mb-2 text-gray-700">
+                <%= route.path %>
+              </h2>
+              <p class="mb-2">
+                <strong class="text-gray-800">Description:</strong> <%=
+                route.description %>
+              </p>
+              <p class="mb-2">
+                <strong class="text-gray-800">Full Example URL:</strong>
+                <a
+                  href="<%= constructExampleUrl(route) %>"
+                  class="text-blue-500 hover:underline"
+                  target="_blank"
+                  ><%= constructExampleUrl(route) %></a
+                >
+              </p>
+              <% if (route.queryParams) { %>
+              <div
+                class="query-params"
+                id="<%= route.path.replace(/\//g, '-') %>-query-params"
+              >
+                <strong class="text-gray-800">Query Parameters:</strong>
+                <ul class="list-disc ml-6">
+                  <% route.queryParams.forEach(param => { %>
+                  <li class="mb-2">
+                    <label for="<%= param.name %>" class="block text-gray-700"
+                      ><%= param.name %> (<%= param.type %>):</label
+                    >
+                    <input
+                      type="text"
+                      id="<%= param.name %>"
+                      class="w-full p-2 border border-gray-300 rounded-lg"
+                      data-query-param="<%= param.name %>"
+                      placeholder="<%= param.description %>"
+                    />
+                  </li>
+                  <% }); %>
+                </ul>
+              </div>
+              <% } %>
+              <div class="mt-4">
+                <% if (method.toUpperCase() !== 'GET' && route.exampleBody) { %>
+                <textarea
+                  class="w-full p-2 border border-gray-300 rounded-lg"
+                  rows="4"
+                  placeholder="Request Body (if applicable)"
+                  id="<%= route.path.replace(/\//g, '-') %>-body"
+                >
+<%= JSON.stringify(route.exampleBody, null, 2) %></textarea
+                >
+                <% } %>
+                <button
+                  class="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 send-request"
+                  data-path="<%= route.path %>"
+                  data-method="<%= method %>"
+                >
+                  Send Request
+                </button>
+              </div>
+              <div
+                class="url-box"
+                id="<%= route.path.replace(/\//g, '-') %>-url-box"
+              >
+                <input
+                  type="text"
+                  readonly
+                  id="<%= route.path.replace(/\//g, '-') %>-url"
+                  value=""
+                />
+                <button
+                  class="copy-url"
+                  data-url-id="<%= route.path.replace(/\//g, '-') %>-url"
+                >
+                  Copy URL
+                </button>
+              </div>
+              <div
+                class="response-area"
+                id="<%= route.path.replace(/\//g, '-') %>-response"
+              ></div>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const coll = document.getElementsByClassName("collapsible");
+        for (let i = 0; i < coll.length; i++) {
+          coll[i].addEventListener("click", function () {
+            this.classList.toggle("active");
+            const content = this.nextElementSibling;
+            content.style.display =
+              content.style.display === "block" ? "none" : "block";
+          });
+        }
+
+        const sendButtons = document.querySelectorAll(".send-request");
+        sendButtons.forEach((button) => {
+          button.addEventListener("click", async function () {
+            const path = this.getAttribute("data-path");
+            const method = this.getAttribute("data-method");
+            const queryParamsDiv = document.getElementById(
+              path.replace(/\//g, "-") + "-query-params"
+            );
+            const textarea = document.getElementById(
+              path.replace(/\//g, "-") + "-body"
+            );
+            const requestBody =
+              textarea && method.toUpperCase() !== "GET" ? textarea.value : "";
+            const responseArea = document.getElementById(
+              path.replace(/\//g, "-") + "-response"
+            );
+            const urlBox = document.getElementById(
+              path.replace(/\//g, "-") + "-url"
+            );
+
+            // Construct URL
+            const queryParams = Array.from(
+              queryParamsDiv
+                ? queryParamsDiv.querySelectorAll("[data-query-param]")
+                : []
+            ).reduce((params, input) => {
+              const name = input.getAttribute("data-query-param");
+              const value = input.value;
+              if (value) params[name] = value;
+              return params;
+            }, {});
+
+            const url = `${path}${
+              Object.keys(queryParams).length
+                ? "?" + new URLSearchParams(queryParams).toString()
+                : ""
+            }`;
+
+            urlBox.value = url;
+
+            try {
+              const response = await fetch(url, {
+                method: method,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body:
+                  method.toUpperCase() === "GET"
+                    ? undefined
+                    : requestBody
+                    ? JSON.stringify(JSON.parse(requestBody))
+                    : undefined,
+              });
+              const result = await response.text();
+              try {
+                const json = JSON.parse(result);
+                responseArea.innerHTML = `<pre>${JSON.stringify(
+                  json,
+                  null,
+                  2
+                )}</pre>`;
+              } catch {
+                responseArea.innerHTML = `<pre>${result}</pre>`;
+              }
+              responseArea.classList.add("show");
+            } catch (error) {
+              responseArea.innerHTML = `<pre>Error: ${error.message}</pre>`;
+              responseArea.classList.add("show");
+            }
+          });
+        });
+
+        // Copy URL functionality
+        document.querySelectorAll(".copy-url").forEach((button) => {
+          button.addEventListener("click", function () {
+            const urlBox = document.getElementById(
+              this.getAttribute("data-url-id")
+            );
+            urlBox.select();
+            document.execCommand("copy");
+            alert("URL copied to clipboard!");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

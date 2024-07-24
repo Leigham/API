@@ -29,6 +29,7 @@ import { Request, Response } from "express";
  * @property {string} description - A brief description of the route (e.g., "Returns 'Hello, World!'").
  * @property {boolean} test - Indicates if the route is available in the test environment (true if enabled).
  * @property {Array<{ name: string; type: string; description: string }>} [queryParams] - Optional query parameters for the route.
+ * @property {Record<string, unknown>} [exampleBody] - Optional example body for the route.
  */
 export type Route = {
   path: string;
@@ -40,4 +41,5 @@ export type Route = {
   description: string;
   test: boolean;
   queryParams?: { name: string; type: string; description: string }[];
+  exampleBody?: Record<string, unknown>;
 };

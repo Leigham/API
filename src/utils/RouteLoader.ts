@@ -179,79 +179,11 @@ export class RouteLoader {
       routeGroups[route.method].push(route);
     });
 
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Documentation</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .dropdown-menu {
-      display: none;
-    }
-    .dropdown-menu.show {
-      display: block;
-    }
-  </style>
-</head>
-<body class="bg-gray-100 text-gray-900">
-  <div class="container mx-auto p-6">
-    <h1 class="text-4xl font-extrabold mb-6 text-center text-gray-800">API Documentation</h1>
-    <div class="space-y-6">
-      ${Object.keys(routeGroups)
-        .map(
-          (method) => `
-        <div class="mb-6">
-          <button class="dropdown bg-blue-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" data-target="${method}">
-            ${method.toUpperCase()} Routes
-          </button>
-          <div class="dropdown-menu bg-white shadow-lg rounded-lg p-4 mt-2" id="${method}-menu">
-            ${routeGroups[method]
-              .map(
-                (route) => `
-              <div class="mb-6 border border-gray-200 p-4 rounded-lg">
-                <h2 class="text-2xl font-semibold mb-2 text-gray-700">${
-                  route.path
-                }</h2>
-                <p class="mb-2"><strong class="text-gray-800">Description:</strong> ${
-                  route.description
-                }</p>
-                <p class="mb-2"><strong class="text-gray-800">Full Example URL:</strong> <a href="${this.constructExampleUrl(
-                  route
-                )}" class="text-blue-500 hover:underline" target="_blank">${this.constructExampleUrl(
-                  route
-                )}</a></p>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-        </div>
-      `
-        )
-        .join("")}
-    </div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const buttons = document.querySelectorAll('.dropdown');
-      buttons.forEach(button => {
-        button.addEventListener('click', () => {
-          const targetId = button.getAttribute('data-target');
-          const menu = document.getElementById(targetId + '-menu');
-          if (menu) {
-            menu.classList.toggle('show');
-          }
-        });
-      });
+    res.render("api-docs", {
+      routeGroups,
+      constructExampleUrl: this.constructExampleUrl.bind(this),
+      constructParamExampleUrl: this.constructParamExampleUrl.bind(this),
+      getExample: this.getExample.bind(this),
     });
-  </script>
-</body>
-</html>
-    `;
-
-    res.send(html);
   }
 }

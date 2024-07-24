@@ -33,6 +33,10 @@ export class Server {
     );
 
     const app = express();
+    app.set("view engine", "ejs");
+    app.set("views", path.join(__dirname, "../views"));
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
 
     if (this.enablePublicRoutes) {
       // lets see if the public folder exsits
