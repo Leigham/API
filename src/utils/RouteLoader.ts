@@ -42,7 +42,7 @@ export class RouteLoader {
     });
 
     // Add the route to list all routes
-    this.app.get("/", this.listRoutes.bind(this)); // Ensure correct context with bind
+    this.app.get("/documentation", this.listRoutes.bind(this)); // Ensure correct context with bind
   }
 
   /**
