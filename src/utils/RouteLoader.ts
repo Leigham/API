@@ -90,17 +90,6 @@ export class RouteLoader {
   private constructExampleUrl(route: Route): string {
     let url = `http://localhost:4000${route.path}`; // Adjust base URL as necessary
 
-    // Replace path parameters with example values
-    if (route.params) {
-      route.params.forEach((param) => {
-        const placeholder = `{${param.name}}`;
-        url = url.replace(
-          placeholder,
-          encodeURIComponent(this.getExample(param))
-        );
-      });
-    }
-
     // Append query parameters if any
     if (route.queryParams) {
       const queryString = route.queryParams
@@ -132,24 +121,6 @@ export class RouteLoader {
     param: { name: string; type: string; description: string }
   ): string {
     let url = `http://localhost:4000${route.path}`; // Adjust base URL as necessary
-
-    // Replace path parameters with example values
-    if (route.params) {
-      route.params.forEach((p) => {
-        const placeholder = `{${p.name}}`;
-        if (p.name === param.name) {
-          url = url.replace(
-            placeholder,
-            encodeURIComponent(this.getExample(param))
-          );
-        } else {
-          url = url.replace(
-            placeholder,
-            encodeURIComponent(this.getExample(p))
-          );
-        }
-      });
-    }
 
     // Append query parameters if any
     if (route.queryParams) {
@@ -252,37 +223,6 @@ export class RouteLoader {
                 )}" class="text-blue-500 hover:underline" target="_blank">${this.constructExampleUrl(
                   route
                 )}</a></p>
-                ${
-                  route.params
-                    ? `
-                  <p class="mb-2"><strong class="text-gray-800">Parameters:</strong></p>
-                  <ul class="list-disc pl-5">
-                    ${route.params
-                      .map(
-                        (param) => `
-                      <li class="mb-4 text-gray-600">
-                        <strong class="text-gray-800">${param.name}</strong> (${
-                          param.type
-                        }): ${param.description}
-                        <div class="mt-2">
-                          <strong class="text-gray-800">Example Value:</strong>
-                          <pre class="bg-gray-100 p-2 rounded"><code>${this.getExample(
-                            param
-                          )}</code></pre>
-                          <strong class="text-gray-800">Full Example URL:</strong>
-                          <pre class="bg-gray-100 p-2 rounded"><code>${this.constructParamExampleUrl(
-                            route,
-                            param
-                          )}</code></pre>
-                        </div>
-                      </li>
-                    `
-                      )
-                      .join("")}
-                  </ul>
-                `
-                    : ""
-                }
               </div>
             `
               )
