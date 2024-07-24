@@ -78,7 +78,7 @@ const handler: RequestHandler = (req, res) => {
 };
 
 export default {
-  path: "/hello",
+  path: "/hello", // localhost:port/getHello
   method: "GET",
   handler,
   description: "Returns a hello world message",
