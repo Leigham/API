@@ -55,8 +55,10 @@ export class RouteLoader {
     const files = fs.readdirSync(directoryPath);
 
     files.forEach((file) => {
+      const isFile = file.endsWith(".ts") || file.endsWith(".js");
       const filePath = path.join(directoryPath, file);
-      if (fs.statSync(filePath).isFile() && file.endsWith(".ts")) {
+
+      if (fs.statSync(filePath).isFile() && isFile) {
         const routeModule = require(filePath) as { default: Route };
         this.registerRoute(routeModule.default, method);
       }

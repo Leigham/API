@@ -8,6 +8,10 @@
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css"
+      rel="stylesheet"
+    />
     <style>
       .collapsible {
         cursor: pointer;
@@ -55,29 +59,53 @@
         border: 1px solid #ccc;
         background: #f1f1f1;
         border-radius: 5px;
-        position: relative;
+        display: flex;
+        align-items: center;
       }
       .url-box input {
         border: none;
         background: none;
-        width: calc(100% - 40px);
+        flex: 1; /* Allow the input to take up available space */
         padding: 5px;
         font-size: 14px;
       }
       .url-box button {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
         background: #38a169;
         color: white;
         border: none;
         padding: 5px 10px;
         border-radius: 5px;
         cursor: pointer;
+        margin-left: 5px; /* Reduced margin to fit within the container */
       }
       .url-box button:hover {
         background: #2f855a;
+      }
+      .status-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .status-info .status-code {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        border-radius: 50%;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        margin-right: 10px;
+      }
+      .status-info .status-text {
+        font-size: 16px;
+        margin-right: 10px;
+      }
+      .status-info .response-time {
+        font-size: 14px;
+        color: gray;
       }
       pre {
         white-space: pre-wrap; /* Ensures text wraps properly */
@@ -87,7 +115,20 @@
     </style>
   </head>
   <body class="bg-gray-100 text-gray-900">
-    <div class="container mx-auto p-6">
+    <!-- Navbar -->
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+      <div class="container mx-auto flex justify-between items-center">
+        <a href="#" class="text-2xl font-bold">API Docs</a>
+        <ul class="flex space-x-4">
+          <li><a href="#" class="hover:underline">Home</a></li>
+          <li><a href="#" class="hover:underline">About</a></li>
+          <li><a href="#" class="hover:underline">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6">
       <h1 class="text-4xl font-extrabold mb-6 text-center text-gray-800">
         API Documentation
       </h1>
@@ -99,7 +140,9 @@
           </button>
           <div class="content">
             <% routeGroups[method].forEach(route => { %>
-            <div class="mb-6 border border-gray-200 bg-white p-4 rounded-lg">
+            <div
+              class="mb-6 border border-gray-200 bg-white p-4 rounded-lg shadow-md"
+            >
               <h2 class="text-2xl font-semibold mb-2 text-gray-700">
                 <%= route.path %>
               </h2>
@@ -151,13 +194,6 @@
 <%= JSON.stringify(route.exampleBody, null, 2) %></textarea
                 >
                 <% } %>
-                <button
-                  class="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 send-request"
-                  data-path="<%= route.path %>"
-                  data-method="<%= method %>"
-                >
-                  Send Request
-                </button>
               </div>
               <div
                 class="url-box"
@@ -170,23 +206,56 @@
                   value=""
                 />
                 <button
+                  class="send-request"
+                  data-path="<%= route.path %>"
+                  data-method="<%= method %>"
+                >
+                  Send Request
+                </button>
+                <button
                   class="copy-url"
                   data-url-id="<%= route.path.replace(/\//g, '-') %>-url"
                 >
                   Copy URL
                 </button>
               </div>
+              <div class="status-info">
+                <div
+                  class="status-code"
+                  id="<%= route.path.replace(/\//g, '-') %>-status-code"
+                ></div>
+                <div
+                  class="status-text"
+                  id="<%= route.path.replace(/\//g, '-') %>-status-text"
+                ></div>
+                <div
+                  class="response-time"
+                  id="<%= route.path.replace(/\//g, '-') %>-response-time"
+                ></div>
+              </div>
               <div
                 class="response-area"
                 id="<%= route.path.replace(/\//g, '-') %>-response"
-              ></div>
+              >
+                <!-- Status info will be inserted here -->
+              </div>
             </div>
             <% }); %>
           </div>
         </div>
         <% }); %>
       </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 text-white py-4">
+      <div class="container mx-auto text-center">
+        <p>&copy; 2024 API Documentation. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const coll = document.getElementsByClassName("collapsible");
@@ -237,7 +306,13 @@
                 : ""
             }`;
 
-            urlBox.value = url;
+            // totalUrl
+            const totalurl = `${window.location.origin}${url}`;
+
+            urlBox.value = totalurl;
+
+            // Start timer
+            const startTime = performance.now();
 
             try {
               const response = await fetch(url, {
@@ -252,26 +327,75 @@
                     ? JSON.stringify(JSON.parse(requestBody))
                     : undefined,
               });
+
+              // Calculate time taken
+              const endTime = performance.now();
+              const timeTaken = (endTime - startTime).toFixed(2);
+
+              const statusCodeElement = document.getElementById(
+                path.replace(/\//g, "-") + "-status-code"
+              );
+              const statusTextElement = document.getElementById(
+                path.replace(/\//g, "-") + "-status-text"
+              );
+              const responseTimeElement = document.getElementById(
+                path.replace(/\//g, "-") + "-response-time"
+              );
+
+              // Set status code and color
+              statusCodeElement.textContent = response.status;
+              statusCodeElement.style.backgroundColor = response.ok
+                ? "#38a169"
+                : "#e53e3e"; // Green for OK, Red for Error
+
+              // Set status text
+              statusTextElement.textContent =
+                response.statusText || "No status text available";
+
+              // Set response time
+              responseTimeElement.textContent = `Time Taken: ${timeTaken} ms`;
+
               const result = await response.text();
               try {
                 const json = JSON.parse(result);
-                responseArea.innerHTML = `<pre>${JSON.stringify(
+                responseArea.innerHTML = `<pre><code class="language-json">${JSON.stringify(
                   json,
                   null,
                   2
-                )}</pre>`;
+                )}</code></pre>`;
+                Prism.highlightAll();
               } catch {
-                responseArea.innerHTML = `<pre>${result}</pre>`;
+                responseArea.innerHTML = `<pre><code>${result}</code></pre>`;
               }
               responseArea.classList.add("show");
             } catch (error) {
-              responseArea.innerHTML = `<pre>Error: ${error.message}</pre>`;
+              const statusCodeElement = document.getElementById(
+                path.replace(/\//g, "-") + "-status-code"
+              );
+              const statusTextElement = document.getElementById(
+                path.replace(/\//g, "-") + "-status-text"
+              );
+              const responseTimeElement = document.getElementById(
+                path.replace(/\//g, "-") + "-response-time"
+              );
+
+              // Set status code and color for error
+              statusCodeElement.textContent = "Error";
+              statusCodeElement.style.backgroundColor = "#e53e3e";
+
+              // Set status text
+              statusTextElement.textContent =
+                error.message || "Error fetching data";
+
+              // Set response time
+              responseTimeElement.textContent = `Time Taken: ${timeTaken} ms`;
+
+              responseArea.innerHTML = `<pre><code>Error: ${error.message}</code></pre>`;
               responseArea.classList.add("show");
             }
           });
         });
 
-        // Copy URL functionality
         document.querySelectorAll(".copy-url").forEach((button) => {
           button.addEventListener("click", function () {
             const urlBox = document.getElementById(
